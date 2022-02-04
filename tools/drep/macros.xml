@@ -1,8 +1,16 @@
+<?xml version="1.0"?>
 <macros>
-    <token name="@VERSION@">2.5.4</token>
+    <token name="@TOOL_VERSION@">2.5.4</token>
+    <token name="@VERSION_SUFFIX@">0</token>
+    <token name="@PROFILE@">20.01</token>
+    <xml name="bio.tools">
+        <xrefs>
+            <xref type="bio.tools">drep</xref>
+        </xrefs>
+    </xml>
     <xml name="requirements">
         <requirements>
-            <requirement type="package" version="@VERSION@">drep</requirement>
+            <requirement type="package" version="@TOOL_VERSION@">drep</requirement>
             <yield/>
         </requirements>
     </xml>
@@ -12,28 +20,24 @@
             <yield />
         </citations>
     </xml>
-
-
     <xml name="genomes">
         <param argument="--genomes" type="data" format="fasta" label="genomes fasta files" multiple="true"/>
     </xml>
     <token name="@PREPARE_GENOMES@"><![CDATA[
-    #import re 
-    #set $genomefiles = [] 
-    #for $genome in $genomes
-        #set $input_name = $re.sub('[^\w\-_.]', '_',str($genome.element_identifier.split('/')[-1]))
-        ln -s '${genome}' '${input_name}' &&
-        $genomefiles.append($input_name)
-    #end for
-]]></token>
+#import re
+#set $genomefiles = []
+#for $genome in $genomes
+    #set $input_name = $re.sub('[^\w\-_.]', '_',str($genome.element_identifier.split('/')[-1]))
+ln -s '${genome}' 'g_${input_name}' &&
+$genomefiles.append($input_name)
+#end for
+    ]]></token>
     <token name="@GENOMES@"><![CDATA[
-    -g 
-    #for $genomefile in $genomefiles
-    '${genomefile}' 
-    #end for
-]]></token>
-
-
+    -g
+#for $genomefile in $genomefiles
+    'g_${genomefile}'
+#end for
+    ]]></token>
     <xml name="checkm_method">
         <param argument="--checkM_method" type="select" label="checkm method" optional="true">
            <option value="taxonomy_wf">taxonomy_wf (faster)</option>
@@ -41,11 +45,10 @@
         </param>
     </xml>
     <token name="@CHECKM_METHOD@"><![CDATA[
-    #if $checkM_method:
-    --checkM_method $checkM_method 
-    #end if
+#if $checkM_method:
+    --checkM_method $checkM_method
+#end if
 ]]></token>
-
     <xml name="filtering_options">
         <conditional name="filter">
             <param name="set_options" type="select" label="set filtering options">
@@ -56,14 +59,14 @@
                 <param argument="--length" type="integer" value="50000" label="Minimum genome length"/>
                 <param argument="--completeness" type="integer" value="75" min="0" max="100" label="Minimum genome completeness percent"/>
                 <param argument="--contamination" type="integer" value="25" min="0" max="100" label="Maximum genome contamination percent"/>
-                 
+
                 <conditional name="quality">
                     <param argument="source" type="select" label="genome quality">
                         <help>
                             --ignoreGenomeQuality is useful with
                             bacteriophages or eukaryotes or things where checkM
                             scoring does not work. Will only choose genomes based
-                            on length and N50. 
+                            on length and N50.
                         </help>
                         <option value="checkm" selected="true">Run checkM</option>
                         <option value="genomeInfo">User supplied genomeInfo csv file</option>
@@ -82,9 +85,9 @@
                         <param argument="--genomeInfo" type="data" format="csv" label="genomes fasta files">
                             <help><![CDATA[
                             A CSV dataset that must contain: [
-                            "genome"(history dataset name of .fasta dataset of that genome), 
-                            "completeness"(0-100 value for completeness of the genome), 
-                            "contamination"(0-100 value of the contamination of the genome)] 
+                            "genome"(history dataset name of .fasta dataset of that genome),
+                            "completeness"(0-100 value for completeness of the genome),
+                            "contamination"(0-100 value of the contamination of the genome)]
                             ]]></help>
                         </param>
                     </when>
@@ -95,22 +98,21 @@
         </conditional>
     </xml>
     <token name="@FILTER_OPTIONS@"><![CDATA[
-        #if $filter.set_options == 'yes':
-            --length $filter.length
-            --completeness $filter.completeness
-            --contamination $filter.contamination
-            #if $filter.quality.source == 'checkm'
-                --checkM_method $filter.quality.checkM_method
-            #elif $filter.quality.source == 'genomeInfo'
-                --genomeInfo $filter.quality.genomeInfo 
-            #elif $filter.quality.source == 'ignoreGenomeQuality'
-                --ignoreGenomeQuality
-            #end if
-        #else
-            --checkM_method taxonomy_wf
-        #end if
+#if $filter.set_options == 'yes':
+    --length $filter.length
+    --completeness $filter.completeness
+    --contamination $filter.contamination
+    #if $filter.quality.source == 'checkm'
+        --checkM_method $filter.quality.checkM_method
+    #elif $filter.quality.source == 'genomeInfo'
+        --genomeInfo $filter.quality.genomeInfo
+    #elif $filter.quality.source == 'ignoreGenomeQuality'
+        --ignoreGenomeQuality
+    #end if
+#else
+    --checkM_method taxonomy_wf
+#end if
 ]]></token>
-
     <xml name="genome_comparison_options">
         <conditional name="genome_comparison">
             <param name="set_options" type="select" label="set genome comparison options">
@@ -133,13 +135,12 @@
         </conditional>
     </xml>
     <token name="@GENOME_COMPARISON_OPTIONS@"><![CDATA[
-        #if $genome_comparison.set_options == 'yes':
-            --MASH_sketch $genome_comparison.MASH_sketch
-            --S_algorithm $genome_comparison.S_algorithm
-            -n_PRESET $genome_comparison.n_PRESET
-        #end if
+#if $genome_comparison.set_options == 'yes':
+    --MASH_sketch $genome_comparison.MASH_sketch
+    --S_algorithm $genome_comparison.S_algorithm
+    -n_PRESET $genome_comparison.n_PRESET
+#end if
 ]]></token>
-
     <xml name="clustering_options">
         <conditional name="clustering">
             <param name="set_options" type="select" label="set clustering options">
@@ -167,17 +168,16 @@
         </conditional>
     </xml>
     <token name="@CLUSTERING_OPTIONS@"><![CDATA[
-        #if $clustering.set_options == 'yes':
-            --P_ani $clustering.P_ani
-            --S_ani $clustering.S_ani
-            $clustering.SkipMash
-            $clustering.SkipSecondary
-            --cov_thresh $clustering.cov_thresh
-            --coverage_method $clustering.coverage_method
-            --clusterAlg $clustering.clusterAlg
-        #end if
+#if $clustering.set_options == 'yes':
+    --P_ani $clustering.P_ani
+    --S_ani $clustering.S_ani
+    $clustering.SkipMash
+    $clustering.SkipSecondary
+    --cov_thresh $clustering.cov_thresh
+    --coverage_method $clustering.coverage_method
+    --clusterAlg $clustering.clusterAlg
+#end if
 ]]></token>
-
     <xml name="scoring_options">
         <conditional name="scoring">
             <param name="set_options" type="select" label="set scoring options">
@@ -201,15 +201,14 @@ A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weig
         </conditional>
     </xml>
     <token name="@SCORING_OPTIONS@"><![CDATA[
-        #if $scoring.set_options == 'yes':
-            --completeness_weight $scoring.completeness_weight
-            --contamination_weight $scoring.contamination_weight
-            --strain_heterogeneity_weight $scoring.strain_heterogeneity_weight
-            --N50_weight $scoring.N50_weight
-            --size_weight $scoring.size_weight
-        #end if
+#if $scoring.set_options == 'yes':
+    --completeness_weight $scoring.completeness_weight
+    --contamination_weight $scoring.contamination_weight
+    --strain_heterogeneity_weight $scoring.strain_heterogeneity_weight
+    --N50_weight $scoring.N50_weight
+    --size_weight $scoring.size_weight
+#end if
 ]]></token>
-
     <xml name="taxonomy_options">
         <conditional name="taxonomy">
             <param name="set_options" type="select" label="generate taxonomy information">
@@ -229,14 +228,13 @@ A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weig
         </conditional>
     </xml>
     <token name="@TAXONOMY_OPTIONS@"><![CDATA[
-        #if $taxonomy.set_options == 'yes':
-            --run_tax
-            --tax_method $taxonomy.tax_method
-            --percent $taxonomy.percent
-            --cent_index $taxonomy.cent_index
-        #end if
+#if $taxonomy.set_options == 'yes':
+    --run_tax
+    --tax_method $taxonomy.tax_method
+    --percent $taxonomy.percent
+    --cent_index $taxonomy.cent_index
+#end if
 ]]></token>
-
    <xml name="warning_options">
         <conditional name="warning">
             <param name="set_options" type="select" label="set warning options">
@@ -252,13 +250,12 @@ A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weig
         </conditional>
     </xml>
     <token name="@WARNING_OPTIONS@"><![CDATA[
-        #if $warning.set_options == 'yes':
-            --warn_dist $warning.warn_dist
-            --warn_sim $warning.warn_sim
-            --warn_aln $warning.warn_aln
-        #end if
+#if $warning.set_options == 'yes':
+    --warn_dist $warning.warn_dist
+    --warn_sim $warning.warn_sim
+    --warn_aln $warning.warn_aln
+#end if
 ]]></token>
-
     <xml name="select_outputs">
         <param name="select_outputs" type="select" multiple="true" optional="false" label="Select outputs">
             <option value="log" selected="true">log</option>
@@ -278,7 +275,6 @@ A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weig
             <option value="Chdb">Chdb.tsv</option>
         </expand>
     </xml>
-
    <xml name="common_outputs">
         <data name="log" format="txt" label="${tool.name} on ${on_string}: Log" from_work_dir="outdir/log/logger.log">
             <filter>'log' in select_outputs or not select_outputs</filter>
@@ -299,8 +295,6 @@ A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weig
             <filter>'Clustering_scatterplots' in select_outputs</filter>
         </data>
     </xml>
-
-
     <xml name="drep_outputs">
         <expand macro="common_outputs"/>
         <data name="Cluster_scoring" format="pdf" label="${tool.name} on ${on_string}: Cluster_scoring.pdf" from_work_dir="outdir/figures/Cluster_scoring.pdf">
@@ -316,8 +310,6 @@ A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weig
             <filter>'Chdb' in select_outputs</filter>
         </data>
     </xml>
-
-    
     <xml name="test_defaults_log">
         <test>
             <param name="genomes" ftype="fasta" value="Enterococcus_casseliflavus_EC20.fasta,Enterococcus_faecalis_T2.fna,Enterococcus_faecalis_TX0104.fa"/>
@@ -328,7 +320,16 @@ A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weig
             </output>
         </test>
     </xml>
-
+    <xml name="test_integer_names">
+        <test>
+            <param name="genomes" ftype="fasta" value="001,002,003"/>
+            <output name="log">
+                <assert_contents>
+                    <yield/>
+                </assert_contents>
+            </output>
+        </test>
+    </xml>
     <token name="@GENOMES_HELP@"><![CDATA[
 I/O PARAMETERS:
   -g [GENOMES [GENOMES ...]], --genomes [GENOMES [GENOMES ...]]
@@ -337,7 +338,6 @@ I/O PARAMETERS:
 
 
 ]]></token>
-
     <token name="@FILTERING_HELP@"><![CDATA[
 FILTERING OPTIONS:
   -l LENGTH, --length LENGTH
@@ -364,7 +364,6 @@ FILTERING OPTIONS:
 
 
 ]]></token>
-
     <token name="@GENOME_COMPARISON_HELP@"><![CDATA[
 GENOME COMPARISON PARAMETERS:
   -ms MASH_SKETCH, --MASH_sketch MASH_SKETCH
@@ -383,7 +382,6 @@ GENOME COMPARISON PARAMETERS:
                         normal  = default ANIn parameters (default: normal)
 
 ]]></token>
-
     <token name="@CLUSTERING_HELP@"><![CDATA[
 CLUSTERING PARAMETERS:
   -pa P_ANI, --P_ani P_ANI
@@ -413,10 +411,9 @@ CLUSTERING PARAMETERS:
                         scipy.cluster.hierarchy.linkage (default: average)
 
 ]]></token>
-
     <token name="@SCORING_HELP@"><![CDATA[
 SCORING CRITERIA
-Based off of the formula: 
+Based off of the formula:
 A*Completeness - B*Contamination + C*(Contamination * (strain_heterogeneity/100)) + D*log(N50) + E*log(size)
 
 A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weight; D = N50_weight; E = size_weight:
@@ -433,7 +430,6 @@ A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weig
 
 
 ]]></token>
-
     <token name="@TAXONOMY_HELP@"><![CDATA[
 TAXONOMY:
   --run_tax             generate taxonomy information (Tdb)
@@ -457,7 +453,6 @@ TAXONOMY:
                         (default: None)
 
 ]]></token>
-
     <token name="@WARNINGS_HELP@"><![CDATA[
 WARNINGS:
   --warn_dist WARN_DIST
@@ -469,6 +464,4 @@ WARNINGS:
                         dereplicated genomes (ANIn) (default: 0.25)
 
 ]]></token>
-
-
 </macros>

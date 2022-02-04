@@ -28,6 +28,9 @@
         <expand macro="test_defaults_log">
             <has_text text="dRep compare finished" />
         </expand>
+        <expand macro="test_integer_names">
+            <has_text text="dRep compare finished" />
+        </expand>
     </tests>
     <help><![CDATA[
 **dRep compare**
